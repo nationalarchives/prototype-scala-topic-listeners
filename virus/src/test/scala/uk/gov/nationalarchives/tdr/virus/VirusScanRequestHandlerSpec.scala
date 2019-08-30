@@ -1,4 +1,4 @@
-package uk.gov.nationalarchives.tdr.virusscan
+package uk.gov.nationalarchives.tdr.virus
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 

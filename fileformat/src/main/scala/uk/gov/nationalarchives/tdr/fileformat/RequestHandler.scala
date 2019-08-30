@@ -6,7 +6,7 @@ import com.amazonaws.services.lambda.runtime.{Context, RequestStreamHandler}
 import io.circe
 import io.circe.generic.auto._
 import io.circe.parser.decode
-import uk.gov.nationalarchives.tdr.core.api.{ApiClient, FileFormatApiResponse}
+import uk.gov.nationalarchives.tdr.core.api.{ApiClient, ChecksumApiResponse, FileFormatApiResponse, Input}
 
 import scala.io.Source
 
@@ -16,29 +16,30 @@ class RequestHandler extends RequestStreamHandler {
     case class Matches(ns: String, id: String, format: String, version: String, mime: String, basis: String, warning: String)
     case class Files(filename: String, filesize: Double, modified: String, errors: String, matches: List[Matches])
     case class FileFormat(siegfried: String, scandate: String, signature: String, created: String, identifiers: List[Identifiers], files: List[Files])
-
-    case class CreateFileFormat(updateFileFormat: Boolean)
+    case class SnsInput(Input: FileFormat)
 
     val inputString = Source.fromInputStream(inputStream, "UTF-8").mkString
 
-    val parsedRequest = decode[FileFormat](inputString)
+    print(inputString)
 
-    val success = parsedRequest match {
-      case Left(failure) => throw new RuntimeException(failure)
-      case Right(fileFormatRequest) =>
-        val file = fileFormatRequest.files.head
-        file.matches.forall(fileMatch => {
-          val query = s"""mutation {updateFileFormat(pronomId: "${fileMatch.id}", id: ${file.filename})}"""
-          val apiClient = new ApiClient()
-          val body = apiClient.sendQueryToApi(query)
+    for {
+      inputRequest <- decode[Input](inputString)
+      snsInputObj <- decode[SnsInput](inputRequest.Records.head.Sns.Message)
+    } yield {
+      val fileFormatRequest =  snsInputObj.Input
+      val file = fileFormatRequest.files.head
+      val success = file.matches.forall(fileMatch => {
+        val query = s"""mutation {updateFileFormat(pronomId: "${fileMatch.id}", id: ${file.filename})}"""
+        val apiClient = new ApiClient()
+        val body = apiClient.sendQueryToApi(query)
 
-          val apiResponse: Either[circe.Error, FileFormatApiResponse] = decode[FileFormatApiResponse](body)
-          apiResponse match {
-            case Right(response) => response.data.updateFileFormat
-            case Left(err) => print(err); false
-          }
-        })
+        val apiResponse: Either[circe.Error, FileFormatApiResponse] = decode[FileFormatApiResponse](body)
+        apiResponse match {
+          case Right(response) => response.data.updateFileFormat
+          case Left(err) => print(err); false
+        }
+      })
+      outputStream.write(success.toString.getBytes())
     }
-    outputStream.write(success.toString.getBytes())
   }
 }

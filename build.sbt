@@ -35,7 +35,7 @@ lazy val checksum = (project in file("checksum"))
   ).dependsOn(core)
 
 
-lazy val virusscan = (project in file("virusscan"))
+lazy val virus = (project in file("virus"))
   .settings(
     libraryDependencies += "com.amazonaws" % "aws-lambda-java-core" % "1.1.0",
     libraryDependencies += scalaTest % Test,

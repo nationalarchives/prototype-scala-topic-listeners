@@ -34,7 +34,7 @@ class ApiClient {
       .withBody(new ByteArrayInputStream(requestBody.getBytes))
       .withHttpMethod(HttpMethodName.POST)
       .withHeaders(headers)
-      .withResourcePath("/prototype/graphql-iam")
+      .withResourcePath(sys.env("PATH"))
       .build
 
     val response: GenericApiGatewayResponse = apiGatewayClient.execute(request)
