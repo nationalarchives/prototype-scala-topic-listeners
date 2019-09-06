@@ -27,7 +27,7 @@ class RequestHandler extends RequestStreamHandler {
       val checksumRequest = snsInputObj.Input
       val checksum = checksumRequest.checksum
       val fileId = checksumRequest.file.split("/")(1)
-      val query = s"""mutation Bob {updateServerSideFileChecksum(checksum: "$checksum", id: $fileId)}"""
+      val query = s"""mutation Bob {updateServerSideFileChecksum(checksum: "$checksum", id: "$fileId")}"""
       val apiClient = new ApiClient()
       val body = apiClient.sendQueryToApi(query)
       val apiResponse: Either[circe.Error, ChecksumApiResponse] = decode[ChecksumApiResponse](body)

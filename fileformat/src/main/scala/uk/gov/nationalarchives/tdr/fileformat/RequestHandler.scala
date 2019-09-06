@@ -29,7 +29,7 @@ class RequestHandler extends RequestStreamHandler {
       val fileFormatRequest =  snsInputObj.Input
       val file = fileFormatRequest.files.head
       val success = file.matches.forall(fileMatch => {
-        val query = s"""mutation {updateFileFormat(pronomId: "${fileMatch.id}", id: ${file.filename})}"""
+        val query = s"""mutation {updateFileFormat(pronomId: "${fileMatch.id}", id: "${file.filename}")}"""
         val apiClient = new ApiClient()
         val body = apiClient.sendQueryToApi(query)
 

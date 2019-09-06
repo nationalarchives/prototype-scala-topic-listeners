@@ -25,7 +25,7 @@ class RequestHandler extends RequestStreamHandler {
       val virusCheckRequest = snsInputObj.Input
       val status = virusCheckRequest.status
       val fileId = virusCheckRequest.filename.split("/")(1)
-      val query = s"""mutation {updateVirusCheck(status: "$status", id: $fileId)}"""
+      val query = s"""mutation {updateVirusCheck(status: "$status", id: "$fileId")}"""
       val apiClient = new ApiClient()
       val body = apiClient.sendQueryToApi(query)
       val apiResponse: Either[circe.Error, VirusCheckApiResponse] = decode[VirusCheckApiResponse](body)
