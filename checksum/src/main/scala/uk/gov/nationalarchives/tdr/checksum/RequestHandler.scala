@@ -22,12 +22,12 @@ class RequestHandler extends RequestStreamHandler {
 
     for {
       inputRequest <- decode[Input](inputString)
-      snsInputObj <- decode[SnsInput](inputRequest.Records.head.Sns.Message)
+      checksumRequest <- decode[ChecksumRequest](inputRequest.Records.head.Sns.Message)
     } yield {
-      val checksumRequest = snsInputObj.Input
       val checksum = checksumRequest.checksum
       val fileId = checksumRequest.file.split("/")(1)
       val query = s"""mutation Bob {updateServerSideFileChecksum(checksum: "$checksum", id: "$fileId")}"""
+      println(query)
       val apiClient = new ApiClient()
       val body = apiClient.sendQueryToApi(query)
       val apiResponse: Either[circe.Error, ChecksumApiResponse] = decode[ChecksumApiResponse](body)
@@ -35,6 +35,7 @@ class RequestHandler extends RequestStreamHandler {
         case Right(response) => response.data.updateServerSideFileChecksum
         case Left(err) => print(err); false
       }
+      println(success)
       outputStream.write(success.toString.getBytes())
     }
   }
