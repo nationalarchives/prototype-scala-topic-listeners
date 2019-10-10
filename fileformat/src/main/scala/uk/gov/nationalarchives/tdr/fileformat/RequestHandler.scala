@@ -16,7 +16,6 @@ class RequestHandler extends RequestStreamHandler {
     case class Matches(ns: String, id: String, format: String, version: String, mime: String, basis: String, warning: String)
     case class Files(filename: String, filesize: Double, modified: String, errors: String, matches: List[Matches])
     case class FileFormat(siegfried: String, scandate: String, signature: String, created: String, identifiers: List[Identifiers], files: List[Files])
-    case class SnsInput(Input: FileFormat)
 
     val inputString = Source.fromInputStream(inputStream, "UTF-8").mkString
 
@@ -24,9 +23,8 @@ class RequestHandler extends RequestStreamHandler {
 
     for {
       inputRequest <- decode[Input](inputString)
-      snsInputObj <- decode[SnsInput](inputRequest.Records.head.Sns.Message)
+      fileFormatRequest <- decode[FileFormat](inputRequest.Records.head.Sns.Message)
     } yield {
-      val fileFormatRequest =  snsInputObj.Input
       val file = fileFormatRequest.files.head
       val success = file.matches.forall(fileMatch => {
         val query = s"""mutation {updateFileFormat(pronomId: "${fileMatch.id}", id: "${file.filename}")}"""

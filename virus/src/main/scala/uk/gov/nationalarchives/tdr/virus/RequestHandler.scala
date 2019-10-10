@@ -13,16 +13,14 @@ import scala.io.Source
 class RequestHandler extends RequestStreamHandler {
   override def handleRequest(inputStream: InputStream, outputStream: OutputStream, context: Context): Unit = {
     case class VirusCheckRequest(status: String, filename: String)
-    case class SnsInput(Input: VirusCheckRequest)
     val inputString = Source.fromInputStream(inputStream, "UTF-8").mkString
 
     print(inputString)
 
     for {
       inputRequest <- decode[Input](inputString)
-      snsInputObj <- decode[SnsInput](inputRequest.Records.head.Sns.Message)
+      virusCheckRequest <- decode[VirusCheckRequest](inputRequest.Records.head.Sns.Message)
     } yield {
-      val virusCheckRequest = snsInputObj.Input
       val status = virusCheckRequest.status
       val fileId = virusCheckRequest.filename.split("/")(1)
       val query = s"""mutation {updateVirusCheck(status: "$status", id: "$fileId")}"""

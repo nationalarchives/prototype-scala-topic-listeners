@@ -22,9 +22,8 @@ class RequestHandler extends RequestStreamHandler {
 
     for {
       inputRequest <- decode[Input](inputString)
-      snsInputObj <- decode[SnsInput](inputRequest.Records.head.Sns.Message)
+      checksumRequest <- decode[ChecksumRequest](inputRequest.Records.head.Sns.Message)
     } yield {
-      val checksumRequest = snsInputObj.Input
       val checksum = checksumRequest.checksum
       val fileId = checksumRequest.file.split("/")(1)
       val query = s"""mutation Bob {updateServerSideFileChecksum(checksum: "$checksum", id: "$fileId")}"""
